@@ -154,7 +154,7 @@ namespace HexBaronCS
             int result;
             if (items.Count == 3)                                               //Assuming the command actually has 3 items. If it doesn't it isn't a valid upgrade command                               
             {
-                if (items[1].ToUpper() != "LESS" && items[1].ToUpper() != "PBDS" && items[1].ToUpper() != "FARM")   //Check to see if the user has only written one of the two pieces which can be upgraded. If not, return false
+                if (items[1].ToUpper() != "LESS" && items[1].ToUpper() != "PBDS" && items[1].ToUpper() != "WALL")   //Check to see if the user has only written one of the two pieces which can be upgraded. If not, return false
                     return false;
                 try
                 {
@@ -183,7 +183,7 @@ namespace HexBaronCS
                     case "dig":                                                 //used to obtain fuel       The dig and saw commands don't currently do anything specifically different, they both just call the CheckStandardCommandFormat method                                  
                     case "saw":                                                 //used to obtain lumber
                     case "spawn":
-                    case "farm":                                               //used to create a new piece
+                    case "build":                                               //used to create a new piece
                         {
                             return CheckStandardCommandFormat(items);
                         }
@@ -401,7 +401,12 @@ namespace HexBaronCS
 
         public override int CheckMoveIsValid(int distanceBetweenTiles, string startTerrain, string endTerrain)  //This overides the base class method because a Baron can move without being affected by the terrain.
         {
-            if (distanceBetweenTiles == 1)                                      //Assuming the distance between the tiles is 1, then return the fuel cost for the move (1)
+            
+            if (endTerrain == "X")
+            {
+                return -1;
+            }
+            else if (distanceBetweenTiles == 1)                                      //Assuming the distance between the tiles is 1, then return the fuel cost for the move (1)
             {
                 return fuelCostOfMove;
             }
@@ -420,7 +425,11 @@ namespace HexBaronCS
 
         public override int CheckMoveIsValid(int distanceBetweenTiles, string startTerrain, string endTerrain)
         {                                                                       //This overides the base class method because a LESS can't move in a forest.
-            if (distanceBetweenTiles == 1 && startTerrain != "#")
+            if (endTerrain == "X")
+            {
+                return -1;
+            }
+            else if (distanceBetweenTiles == 1 && startTerrain != "#")
             {
                 if (startTerrain == "~" || endTerrain == "~")                   //If the LESS is moving in or out of a peat bog then the fuel cost is double.
                 {
@@ -460,7 +469,11 @@ namespace HexBaronCS
 
         public override int CheckMoveIsValid(int distanceBetweenTiles, string startTerrain, string endTerrain)
         {                                                                       //This overides the base class method because a PBDS can't move in a peat bog.
-            if (distanceBetweenTiles != 1 || startTerrain == "~")               //This means that once a PBDS moves into a peat bog, it can only move out once it has dug.
+            if (endTerrain == "X")
+            {
+                return -1;
+            }
+            else if (distanceBetweenTiles != 1 || startTerrain == "~")               //This means that once a PBDS moves into a peat bog, it can only move out once it has dug.
             {
                 return -1;
             }
@@ -483,45 +496,48 @@ namespace HexBaronCS
             }
         }
     }
-    class FarmPiece : Piece                                                     //Inherits piece. This allows us to inherit some of the base class properties and overide some of its methods
+    class WALLPiece : Piece                                                     //Inherits piece. This allows us to inherit some of the base class properties and overide some of its methods
     {
 
-        public FarmPiece(bool player1)
+        public WALLPiece(bool player1)
             : base(player1)
         {
-            pieceType = "F";                                                    //These are set in the base class to override a standard piece setting. PBDS can only move in field or forest and that costs 2 fuel    
+            pieceType = "W";                                                    //These are set in the base class to override a standard piece setting. PBDS can only move in field or forest and that costs 2 fuel    
             VPValue = 2;
             fuelCostOfMove = 2;
         }
 
         public override int CheckMoveIsValid(int distanceBetweenTiles, string startTerrain, string endTerrain)
         {                                                                       //This overides the base class method because a PBDS can't move in a peat bog.
-            if (distanceBetweenTiles != 1 || startTerrain == "~")               //This means that once a PBDS moves into a peat bog, it can only move out once it has dug.
+            if (endTerrain == "X")
             {
                 return -1;
             }
-            return fuelCostOfMove;
+            else if (distanceBetweenTiles == 1 && startTerrain != "#")
+            {
+                if (startTerrain == "~" || endTerrain == "~")                   //If the LESS is moving in or out of a peat bog then the fuel cost is double.
+                {
+                    return fuelCostOfMove * 2;
+                }
+                else
+                {
+                    return fuelCostOfMove;
+                }
+
+            }
+            return -1;
         }
 
-        public int Dig(string terrain)                                          //The PBDS has additional functionality to be able to dig for peat as fuel.
+        public int Build(string terrain)                                          //The PBDS has additional functionality to be able to dig for peat as fuel.
         {
-            if (terrain != "~")                                                 //It can only dig if it is in a peat bog
+            if (terrain == " ")                                                 //It can only dig if it is in a peat bog
             {
-                return 0;
+                return 1;
             }
             else
             {
-                return 5;
+                return 0;
             }
-        }
-    
-        public int Farm(string terrain)
-        {
-            if (terrain == "#" || terrain == "~")
-            {
-                return 4;
-            }
-            return 1;
         }
     }
     class Tile
@@ -634,9 +650,9 @@ namespace HexBaronCS
             {
                 newPiece = new PBDSPiece(belongsToPlayer1);
             }
-            else if (typeOfPiece == "FARM")                                     //This is called if the player is upgrading from a SERF to a PBDS
+            else if (typeOfPiece == "wall")                                     //This is called if the player is upgrading from a SERF to a PBDS
             {
-                newPiece = new FarmPiece(belongsToPlayer1);
+                newPiece = new WALLPiece(belongsToPlayer1);
             }
             else
             {
@@ -664,9 +680,8 @@ namespace HexBaronCS
                     }
                 case "saw":                                                     //Bcause there is no break command in the "Saw" case, then C# just does the next item in the switch case, therefore no need to repeat the "ExecuteCommandInTile" code
                 case "dig":
-                case "farm":
+                case "build":
                     {
-
                         if (!ExecuteCommandInTile(items, ref fuelChange, ref lumberChange))             //The Baron, LESS and PBDS pieces all inherit the Piece class . This uses system reflection to ask the relevant sub class if they have the methods "Dig" or "Saw". Depending on which piece is locating that tile, they will return true / false
                         {
                             return "Couldn't do that";                          //Returns this if 1: The player doesn't have enough fuel or lumber perform the dig / saw or 2: the piece in that tile doesn't have that functionality / Method (system.reflection...)
@@ -743,11 +758,13 @@ namespace HexBaronCS
                         tiles[tileToUse].SetTerrain(" ");                                   //Assuming the "Dig" occured correctly then set the terrain for this particular tile to a standard field
                     }
                 }
-                else if (items[0] == "farm") 
+                else if (items[0] == "Build") 
                 {
                     fuel += Convert.ToInt32(method.Invoke(thePiece, parameters));           //If the command from the user is "Dig" then call the "Dig" method for this piece and pass in the terrain as the properties
-                    tiles[tileToUse].SetTerrain(" ");                                   //Assuming the "Dig" occured correctly then set the terrain for this particular tile to a standard field
-                    
+                    if (Math.Abs(fuel) == 1)
+                    {
+                        tiles[tileToUse].SetTerrain("X");                                   //Assuming the "Dig" occured correctly then set the terrain for this particular tile to a standard field
+                    }
                 }
                 return true;                                                                //Command all ran correctly - return true
             }
@@ -816,7 +833,7 @@ namespace HexBaronCS
         private int ExecuteUpgradeCommand(List<string> items, int lumberAvailable)
         {
             int tileToUse = Convert.ToInt32(items[2]);                          //The tile the player wants to upgrade is at element 2 of the Commands list
-            if (!CheckPieceAndTileAreValid(tileToUse) || lumberAvailable < 5 || !(items[1] == "pbds" || items[1] == "less" || items[1] == "farm")) //If the tile isn't on the board, or the player doesn't have enough lumber to upgrade command isn't write, then return -1
+            if (!CheckPieceAndTileAreValid(tileToUse) || lumberAvailable < 5 || !(items[1] == "pbds" || items[1] == "less" || items[1] == "wall")) //If the tile isn't on the board, or the player doesn't have enough lumber to upgrade command isn't write, then return -1
             {
                 return -1;
             }
@@ -832,9 +849,9 @@ namespace HexBaronCS
                 {
                     thePiece = new PBDSPiece(player1Turn);
                 }
-                else if(items[1] =="farm")
+                else if (items[1] == "wall")                                         //Looks at element 2 in the <list> commands to see if the player wants to create a Peat Bog Digger or a Lumber Engineer Specialist
                 {
-                    thePiece = new FarmPiece(player1Turn);
+                    thePiece = new WALLPiece(player1Turn);
                 }
                 else
                 {
@@ -1107,4 +1124,9 @@ namespace HexBaronCS
         }
     }
 }
+
+
+
+
+
 
