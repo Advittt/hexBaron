@@ -52,11 +52,11 @@ namespace HexBaronCS
                     lineFromFile = myStream.ReadLine();                         //Read in line one (which contains all the details about player 1)
                     items = lineFromFile.Split(',').ToList();                   //Split line one into a list using the comma as a delimiter
                         //Put items from line 1 into constructor for player 1, (str: name, int: VPs, int: fuel, int: Lumber, int: piecesSupply)
-                    player1 = new Player(items[0], Convert.ToInt32(items[1]), Convert.ToInt32(items[2]), Convert.ToInt32(items[3]), Convert.ToInt32(items[4]));
+                    player1 = new Player(items[0], Convert.ToInt32(items[1]), Convert.ToInt32(items[2]), Convert.ToInt32(items[3]), Convert.ToInt32(items[4]), Convert.ToInt32(items[5]));
                     lineFromFile = myStream.ReadLine();                         //Read in line two (which contains all of the details about player 2)
                     items = lineFromFile.Split(',').ToList();
                         //Put items from line 1 into constructor for player 1, (str: name, int: VPs, int: fuel, int: Lumber, int: piecesSupply)
-                    player2 = new Player(items[0], Convert.ToInt32(items[1]), Convert.ToInt32(items[2]), Convert.ToInt32(items[3]), Convert.ToInt32(items[4]));
+                    player2 = new Player(items[0], Convert.ToInt32(items[1]), Convert.ToInt32(items[2]), Convert.ToInt32(items[3]), Convert.ToInt32(items[4]), Convert.ToInt32(items[5]));
                     int gridSize = Convert.ToInt32(myStream.ReadLine());        //Read in line three which contains the grid size for that game
                     grid = new HexGrid(gridSize);                               //Pass the grid size into the constructor for the hexGrid for creating a new grid
                     List<string> t = new List<string>(myStream.ReadLine().Split(','));      //Different technique here of reading line four in and splitting it at the same time into a temporary list t
@@ -80,8 +80,8 @@ namespace HexBaronCS
             catch
             {
                 Console.WriteLine("File not loaded");                           //If the file is not loaded correctly
-                player1 = new Player("", 0, 0, 0, 0);                           //Instantiates a player with no values. Player constructor is expecting (str: name, int: VPs, int: fuel, int: Lumber, int: piecesSupply)
-                player2 = new Player("", 0, 0, 0, 0);                           //Instantiates a player with no values. Player constructor is expecting (str: name, int: VPs, int: fuel, int: Lumber, int: piecesSupply)
+                player1 = new Player("", 0, 0, 0, 0, 0);                           //Instantiates a player with no values. Player constructor is expecting (str: name, int: VPs, int: fuel, int: Lumber, int: piecesSupply)
+                player2 = new Player("", 0, 0, 0, 0, 0);                           //Instantiates a player with no values. Player constructor is expecting (str: name, int: VPs, int: fuel, int: Lumber, int: piecesSupply)
                 grid = new HexGrid(0);                                          //Instantiates a Grid with a size and count of zero. Technically exists, but can't be used for anything. This is just here to ensure there is a grid to stop it crashing
                 return false;                                                   //Returns FALSE to the main VOID so it won't run the playGame function
             }
@@ -92,11 +92,11 @@ namespace HexBaronCS
         {
                 //The default grid is 8 tiles across. This list works sequentially across the grid with each element representing the associated tile position in the grid (see the tile map in the PM PDF)
             List<string> t = new List<string>() {" ", "#", "#", " ", "~", "~", " ", " ", " ", "~", " ", "#", "#", " ", " ", " "
-                                                 , "o", " ", "#", "#", "#", "#", "~", "~", "~", "~", "~", "o", "#", " ", "#", " "};
+                                                 , "*", " ", "#", "#", "#", "#", "~", "~", "~", "~", "~", " ", "#", " ", "#", " "};
             int gridSize = 8;
             grid = new HexGrid(gridSize);                                       //Passes 8 into the constructor of the HexGrid which therefore instantiates a new grid over the top of the current one
-            player1 = new Player("Player One", 0, 10, 10, 5);                   //Instantiates a player with default values. Player constructor is expecting (str: name, int: VPs, int: fuel, int: Lumber, int: piecesSupply)
-            player2 = new Player("Player Two", 1, 10, 10, 5);                   //Instantiates a player with default values. Player constructor is expecting (str: name, int: VPs, int: fuel, int: Lumber, int: piecesSupply) - Player 2 is already ahead in this game
+            player1 = new Player("Player One", 0, 10, 10, 5, 0);                   //Instantiates a player with default values. Player constructor is expecting (str: name, int: VPs, int: fuel, int: Lumber, int: piecesSupply)
+            player2 = new Player("Player Two", 1, 10, 10, 5, 0);                   //Instantiates a player with default values. Player constructor is expecting (str: name, int: VPs, int: fuel, int: Lumber, int: piecesSupply) - Player 2 is already ahead in this game
             grid.SetUpGridTerrain(t);                                           //Sets up the terrain for this grid from the list initialised above
             grid.AddPiece(true, "Baron", 0);                                    //Adds pieces to the tiles in the grid. First param shows if this piece is for player 1 or not, second param is the type of piece, third param is the location (element number) in the hexgrid list
             grid.AddPiece(true, "Serf", 8);                                     //Adds pieces to the tiles in the grid. First param shows if this piece is for player 1 or not, second param is the type of piece, third param is the location (element number) in the hexgrid list
@@ -154,7 +154,7 @@ namespace HexBaronCS
             int result;
             if (items.Count == 3)                                               //Assuming the command actually has 3 items. If it doesn't it isn't a valid upgrade command                               
             {
-                if (items[1].ToUpper() != "LESS" && items[1].ToUpper() != "PBDS" && items[1].ToUpper() != "WIZARD")   //Check to see if the user has only written one of the two pieces which can be upgraded. If not, return false
+                if (items[1].ToUpper() != "LESS" && items[1].ToUpper() != "PBDS" && items[1].ToUpper() != "MINER")   //Check to see if the user has only written one of the two pieces which can be upgraded. If not, return false
                     return false;
                 try
                 {
@@ -183,6 +183,7 @@ namespace HexBaronCS
                     case "dig":                                                 //used to obtain fuel       The dig and saw commands don't currently do anything specifically different, they both just call the CheckStandardCommandFormat method                                  
                     case "saw":                                                 //used to obtain lumber
                     case "spawn":
+                    case "mine":                                               //used to create a new piece
                         {
                             return CheckStandardCommandFormat(items);
                         }
@@ -226,24 +227,27 @@ namespace HexBaronCS
                     {
                         int fuelChange = 0;                                     //default values for the how much each can change as a result of player actions.
                         int lumberChange = 0;
+                        int stoneChange = 0;                      
                         int supplyChange = 0;
                         string summaryOfResult;
                         if (player1Turn)
                         {
                             //This is the business end of the application which works out the result of a command from a player and displays the appropriate message on the screen. 
-                            summaryOfResult = grid.ExecuteCommand(items, ref fuelChange, ref lumberChange, ref supplyChange,
-                                player1.GetFuel(), player1.GetLumber(), player1.GetPiecesInSupply());
+                            summaryOfResult = grid.ExecuteCommand(items, ref fuelChange, ref lumberChange, ref stoneChange, ref supplyChange,
+                                player1.GetFuel(), player1.GetLumber(), player1.GetStone(), player1.GetPiecesInSupply());
                             player1.UpdateLumber(lumberChange);                 //Updates the changes to the amount of lumber for the command selected by the user
-                            player1.UpdateFuel(fuelChange);                     //Updates the changes to the amount of fuel for the command selected by the user
+                            player1.UpdateFuel(fuelChange);
+                            player1.UpdateStone(stoneChange);                     //Updates the changes to the amount of fuel for the command selected by the user
                             if (supplyChange == 1)
                                 player1.RemoveTileFromSupply();
                         }
                         else
                         {
-                            summaryOfResult = grid.ExecuteCommand(items, ref fuelChange, ref lumberChange, ref supplyChange,
-                                player2.GetFuel(), player2.GetLumber(), player2.GetPiecesInSupply());
+                            summaryOfResult = grid.ExecuteCommand(items, ref fuelChange, ref lumberChange, ref stoneChange, ref supplyChange,
+                                player2.GetFuel(), player2.GetLumber(), player2.GetStone(), player2.GetPiecesInSupply());
                             player2.UpdateLumber(lumberChange);                 //Updates the changes to the amount of lumber for the command selected by the user
-                            player2.UpdateFuel(fuelChange);                     //Updates the changes to the amount of fuel for the command selected by the user
+                            player2.UpdateFuel(fuelChange);
+                            player2.UpdateStone(stoneChange);                     //Updates the changes to the amount of fuel for the command selected by the user
                             if (supplyChange == 1)
                             {
                                 player2.RemoveTileFromSupply();
@@ -482,32 +486,41 @@ namespace HexBaronCS
             }
         }
     }
-    class WIZARDPiece : Piece                                                     //Inherits piece. This allows us to inherit some of the base class properties and overide some of its methods
+    class MINERPiece : Piece                                                     //Inherits Piece. This allows us to inherit some of the base class properties and overide some of its methods
     {
-        static Random rNoGen = new Random();
-
-        public WIZARDPiece(bool player1)
+        public MINERPiece(bool player1)
             : base(player1)
         {
-            pieceType = "W";                                                    //These are set in the base class to override a standard piece setting. PBDS can only move in field or forest and that costs 2 fuel    
-            VPValue = 2;
-            fuelCostOfMove = 2;
+            pieceType = "M";                                                    //These are set in the base class to override a standard piece setting
+            VPValue = 3;
         }
 
         public override int CheckMoveIsValid(int distanceBetweenTiles, string startTerrain, string endTerrain)
-        {                                                                       //This overides the base class method because a PBDS can't move in a peat bog.
-            if (startTerrain == "o" && endTerrain == "o")
+        {                                                                       //This overides the base class method because a LESS can't move in a forest.
+            if (distanceBetweenTiles == 1 && startTerrain != "#")
             {
-                return fuelCostOfMove;
+                if (startTerrain == "~" || endTerrain == "~")                   //If the LESS is moving in or out of a peat bog then the fuel cost is double.
+                {
+                    return fuelCostOfMove * 2;
+                }
+                else
+                {
+                    return fuelCostOfMove;
+                }
+
             }
-            else if (distanceBetweenTiles != 1 || startTerrain == "~")               //This means that once a PBDS moves into a peat bog, it can only move out once it has dug.
-            {
-                return -1;
-            }
-            return fuelCostOfMove;
+            return -1;
         }
 
-        
+        public int Mine(string terrain)                                          //The LESS has the functionality to saw lumber. This checks to confirm that the terrain the LESS is currently in is forest, otherwise it returns 0
+        {
+            if (terrain == "*")
+            {
+                return 1;
+            }
+            return 0;
+        }
+
     }
 
     class Tile
@@ -620,9 +633,9 @@ namespace HexBaronCS
             {
                 newPiece = new PBDSPiece(belongsToPlayer1);
             }
-            else if (typeOfPiece == "WIZARD")                                     //This is called if the player is upgrading from a SERF to a PBDS
+            else if (typeOfPiece == "MINER")                                     //This is called if the player is upgrading from a SERF to a PBDS
             {
-                newPiece = new WIZARDPiece(belongsToPlayer1);
+                newPiece = new MINERPiece(belongsToPlayer1);
             }
             else
             {
@@ -632,8 +645,8 @@ namespace HexBaronCS
             tiles[location].SetPiece(newPiece);                                 //Because the tiles <list> has been populated with blank tiles at initialisation, then this updates the <list> with the "new" piece
         }
 
-        public string ExecuteCommand(List<string> items, ref int fuelChange, ref int lumberChange,      //We can only have got to his point if the command from the user is valid due to previous checks
-                                     ref int supplyChange, int fuelAvailable, int lumberAvailable,      //fuelChange, lumberChange and supplyChange are all passed by ref rather than by val
+        public string ExecuteCommand(List<string> items, ref int fuelChange, ref int lumberChange, ref int stoneChange,      //We can only have got to his point if the command from the user is valid due to previous checks
+                                     ref int supplyChange, int fuelAvailable,  int lumberAvailable, int stoneAvailable,      //fuelChange, lumberChange and supplyChange are all passed by ref rather than by val
                                      int piecesInSupply)
         {
             switch (items[0])                                                   //The first element in the items list is the command from the user
@@ -650,8 +663,9 @@ namespace HexBaronCS
                     }
                 case "saw":                                                     //Bcause there is no break command in the "Saw" case, then C# just does the next item in the switch case, therefore no need to repeat the "ExecuteCommandInTile" code
                 case "dig":
+                case "mine":
                     {
-                        if (!ExecuteCommandInTile(items, ref fuelChange, ref lumberChange))             //The Baron, LESS and PBDS pieces all inherit the Piece class . This uses system reflection to ask the relevant sub class if they have the methods "Dig" or "Saw". Depending on which piece is locating that tile, they will return true / false
+                        if (!ExecuteCommandInTile(items, ref fuelChange, ref lumberChange , ref stoneChange))             //The Baron, LESS and PBDS pieces all inherit the Piece class . This uses system reflection to ask the relevant sub class if they have the methods "Dig" or "Saw". Depending on which piece is locating that tile, they will return true / false
                         {
                             return "Couldn't do that";                          //Returns this if 1: The player doesn't have enough fuel or lumber perform the dig / saw or 2: the piece in that tile doesn't have that functionality / Method (system.reflection...)
                         }
@@ -700,7 +714,7 @@ namespace HexBaronCS
             return false;
         }
 
-        private bool ExecuteCommandInTile(List<string> items, ref int fuel, ref int lumber) //This executes a command to be performed by a piece in a tile in the tiles <list>
+        private bool ExecuteCommandInTile(List<string> items, ref int fuel, ref int lumber, ref int stone) //This executes a command to be performed by a piece in a tile in the tiles <list>
         {
             int tileToUse = Convert.ToInt32(items[1]);
             if (CheckPieceAndTileAreValid(tileToUse) == false)                              //Check to confirm the tile is valid on the board and there there is actually a piece located there.                     
@@ -726,6 +740,11 @@ namespace HexBaronCS
                     {
                         tiles[tileToUse].SetTerrain(" ");                                   //Assuming the "Dig" occured correctly then set the terrain for this particular tile to a standard field
                     }
+                }
+                else if (items[0] == "Mine") 
+                {
+                    stone += Convert.ToInt32(method.Invoke(thePiece, parameters));           //If the command from the user is "Dig" then call the "Dig" method for this piece and pass in the terrain as the properties
+                    
                 }
                 return true;                                                                //Command all ran correctly - return true
             }
@@ -794,7 +813,7 @@ namespace HexBaronCS
         private int ExecuteUpgradeCommand(List<string> items, int lumberAvailable)
         {
             int tileToUse = Convert.ToInt32(items[2]);                          //The tile the player wants to upgrade is at element 2 of the Commands list
-            if (!CheckPieceAndTileAreValid(tileToUse) || lumberAvailable < 5 || !(items[1] == "pbds" || items[1] == "less" || items[1] == "wizard")) //If the tile isn't on the board, or the player doesn't have enough lumber to upgrade command isn't write, then return -1
+            if (!CheckPieceAndTileAreValid(tileToUse) || lumberAvailable < 5 || !(items[1] == "pbds" || items[1] == "less" || items[1] == "miner")) //If the tile isn't on the board, or the player doesn't have enough lumber to upgrade command isn't write, then return -1
             {
                 return -1;
             }
@@ -810,9 +829,9 @@ namespace HexBaronCS
                 {
                     thePiece = new PBDSPiece(player1Turn);
                 }
-                else if(items[1] == "wizard")
+                else if (items[1] == "miner")                                         //Looks at element 2 in the <list> commands to see if the player wants to create a Peat Bog Digger or a Lumber Engineer Specialist
                 {
-                    thePiece = new WIZARDPiece(player1Turn);
+                    thePiece = new MINERPiece(player1Turn);
                 }
                 else
                 {
@@ -1022,21 +1041,22 @@ namespace HexBaronCS
 
     class Player
     {
-        protected int piecesInSupply, fuel, VPs, lumber;
+        protected int piecesInSupply, fuel, VPs, lumber, stone;
         protected string name;
 
-        public Player(string n, int v, int f, int l, int t)                     //Initialising a player with the default name, victory points, fuel, lumber and number of piece available to them
+        public Player(string n, int v, int f, int l, int t, int s)                     //Initialising a player with the default name, victory points, fuel, lumber and number of piece available to them
         {
             name = n;
             VPs = v;
             fuel = f;
             lumber = l;
+            stone = s;
             piecesInSupply = t;
         }
 
         public virtual string GetStateString()                                  //This displays after each turn to show the user what their current state is
         {
-            return "VPs: " + VPs.ToString() + "   Pieces in supply: " + piecesInSupply.ToString() + "   Lumber: " + lumber.ToString() + "   Fuel: " + fuel.ToString();
+            return "VPs: " + VPs.ToString() + "   Pieces in supply: " + piecesInSupply.ToString() + "   Lumber: " + lumber.ToString() + "   Fuel: " + fuel.ToString() + "   Stone: " + stone.ToString();
         }
 
         public virtual int GetVPs()                                             //Getter for the player victory points
@@ -1052,6 +1072,10 @@ namespace HexBaronCS
         public virtual int GetLumber()                                          //Getter for the player amount of lumber
         {
             return lumber;
+        }
+        public virtual int GetStone()                                          //Getter for the player amount of lumber
+        {
+            return stone;
         }
 
         public virtual string GetName()                                         //Getter for the player name
@@ -1072,6 +1096,10 @@ namespace HexBaronCS
         public virtual void UpdateLumber(int n)                                 //Setter to change the lumber level for the player. This is a virtual method, but is not overridden in any other classes 
         {
             lumber += n;
+        }
+        public virtual void UpdateStone(int n)                                 //Setter to change the lumber level for the player. This is a virtual method, but is not overridden in any other classes 
+        {
+            stone += n;
         }
 
         public int GetPiecesInSupply()                                          //Getter used by the GetStateString() method to display the current player state on the screen
