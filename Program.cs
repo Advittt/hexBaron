@@ -92,7 +92,7 @@ namespace HexBaronCS
         {
                 //The default grid is 8 tiles across. This list works sequentially across the grid with each element representing the associated tile position in the grid (see the tile map in the PM PDF)
             List<string> t = new List<string>() {" ", "#", "#", " ", "~", "~", " ", " ", " ", "~", " ", "#", "#", " ", " ", " "
-                                                 , " ", " ", "#", "#", "#", "#", "~", "~", "~", "~", "~", " ", "#", " ", "#", " "};
+                                                 , "o", " ", "#", "#", "#", "#", "~", "~", "~", "~", "~", "o", "#", " ", "#", " "};
             int gridSize = 8;
             grid = new HexGrid(gridSize);                                       //Passes 8 into the constructor of the HexGrid which therefore instantiates a new grid over the top of the current one
             player1 = new Player("Player One", 0, 10, 10, 5);                   //Instantiates a player with default values. Player constructor is expecting (str: name, int: VPs, int: fuel, int: Lumber, int: piecesSupply)
@@ -154,7 +154,7 @@ namespace HexBaronCS
             int result;
             if (items.Count == 3)                                               //Assuming the command actually has 3 items. If it doesn't it isn't a valid upgrade command                               
             {
-                if (items[1].ToUpper() != "LESS" && items[1].ToUpper() != "PBDS" && items[1].ToUpper() != "WALL")   //Check to see if the user has only written one of the two pieces which can be upgraded. If not, return false
+                if (items[1].ToUpper() != "LESS" && items[1].ToUpper() != "PBDS" && items[1].ToUpper() != "WIZARD")   //Check to see if the user has only written one of the two pieces which can be upgraded. If not, return false
                     return false;
                 try
                 {
@@ -183,7 +183,6 @@ namespace HexBaronCS
                     case "dig":                                                 //used to obtain fuel       The dig and saw commands don't currently do anything specifically different, they both just call the CheckStandardCommandFormat method                                  
                     case "saw":                                                 //used to obtain lumber
                     case "spawn":
-                    case "build":                                               //used to create a new piece
                         {
                             return CheckStandardCommandFormat(items);
                         }
@@ -401,12 +400,7 @@ namespace HexBaronCS
 
         public override int CheckMoveIsValid(int distanceBetweenTiles, string startTerrain, string endTerrain)  //This overides the base class method because a Baron can move without being affected by the terrain.
         {
-            
-            if (endTerrain == "X")
-            {
-                return -1;
-            }
-            else if (distanceBetweenTiles == 1)                                      //Assuming the distance between the tiles is 1, then return the fuel cost for the move (1)
+            if (distanceBetweenTiles == 1)                                      //Assuming the distance between the tiles is 1, then return the fuel cost for the move (1)
             {
                 return fuelCostOfMove;
             }
@@ -425,11 +419,7 @@ namespace HexBaronCS
 
         public override int CheckMoveIsValid(int distanceBetweenTiles, string startTerrain, string endTerrain)
         {                                                                       //This overides the base class method because a LESS can't move in a forest.
-            if (endTerrain == "X")
-            {
-                return -1;
-            }
-            else if (distanceBetweenTiles == 1 && startTerrain != "#")
+            if (distanceBetweenTiles == 1 && startTerrain != "#")
             {
                 if (startTerrain == "~" || endTerrain == "~")                   //If the LESS is moving in or out of a peat bog then the fuel cost is double.
                 {
@@ -469,11 +459,7 @@ namespace HexBaronCS
 
         public override int CheckMoveIsValid(int distanceBetweenTiles, string startTerrain, string endTerrain)
         {                                                                       //This overides the base class method because a PBDS can't move in a peat bog.
-            if (endTerrain == "X")
-            {
-                return -1;
-            }
-            else if (distanceBetweenTiles != 1 || startTerrain == "~")               //This means that once a PBDS moves into a peat bog, it can only move out once it has dug.
+            if (distanceBetweenTiles != 1 || startTerrain == "~")               //This means that once a PBDS moves into a peat bog, it can only move out once it has dug.
             {
                 return -1;
             }
@@ -496,10 +482,11 @@ namespace HexBaronCS
             }
         }
     }
-    class WALLPiece : Piece                                                     //Inherits piece. This allows us to inherit some of the base class properties and overide some of its methods
+    class WIZARDPiece : Piece                                                     //Inherits piece. This allows us to inherit some of the base class properties and overide some of its methods
     {
+        static Random rNoGen = new Random();
 
-        public WALLPiece(bool player1)
+        public WIZARDPiece(bool player1)
             : base(player1)
         {
             pieceType = "W";                                                    //These are set in the base class to override a standard piece setting. PBDS can only move in field or forest and that costs 2 fuel    
@@ -509,37 +496,20 @@ namespace HexBaronCS
 
         public override int CheckMoveIsValid(int distanceBetweenTiles, string startTerrain, string endTerrain)
         {                                                                       //This overides the base class method because a PBDS can't move in a peat bog.
-            if (endTerrain == "X")
+            if (startTerrain == "o" && endTerrain == "o")
+            {
+                return fuelCostOfMove;
+            }
+            else if (distanceBetweenTiles != 1 || startTerrain == "~")               //This means that once a PBDS moves into a peat bog, it can only move out once it has dug.
             {
                 return -1;
             }
-            else if (distanceBetweenTiles == 1 && startTerrain != "#")
-            {
-                if (startTerrain == "~" || endTerrain == "~")                   //If the LESS is moving in or out of a peat bog then the fuel cost is double.
-                {
-                    return fuelCostOfMove * 2;
-                }
-                else
-                {
-                    return fuelCostOfMove;
-                }
-
-            }
-            return -1;
+            return fuelCostOfMove;
         }
 
-        public int Build(string terrain)                                          //The PBDS has additional functionality to be able to dig for peat as fuel.
-        {
-            if (terrain == " ")                                                 //It can only dig if it is in a peat bog
-            {
-                return 1;
-            }
-            else
-            {
-                return 0;
-            }
-        }
+        
     }
+
     class Tile
     {
         protected string terrain;                                               //Stores the type of terrain for this piece. # -> Forest, ~ -> Peat Bog, " " (empty space) -> Basic Field                         
@@ -650,9 +620,9 @@ namespace HexBaronCS
             {
                 newPiece = new PBDSPiece(belongsToPlayer1);
             }
-            else if (typeOfPiece == "wall")                                     //This is called if the player is upgrading from a SERF to a PBDS
+            else if (typeOfPiece == "WIZARD")                                     //This is called if the player is upgrading from a SERF to a PBDS
             {
-                newPiece = new WALLPiece(belongsToPlayer1);
+                newPiece = new WIZARDPiece(belongsToPlayer1);
             }
             else
             {
@@ -680,7 +650,6 @@ namespace HexBaronCS
                     }
                 case "saw":                                                     //Bcause there is no break command in the "Saw" case, then C# just does the next item in the switch case, therefore no need to repeat the "ExecuteCommandInTile" code
                 case "dig":
-                case "build":
                     {
                         if (!ExecuteCommandInTile(items, ref fuelChange, ref lumberChange))             //The Baron, LESS and PBDS pieces all inherit the Piece class . This uses system reflection to ask the relevant sub class if they have the methods "Dig" or "Saw". Depending on which piece is locating that tile, they will return true / false
                         {
@@ -758,14 +727,6 @@ namespace HexBaronCS
                         tiles[tileToUse].SetTerrain(" ");                                   //Assuming the "Dig" occured correctly then set the terrain for this particular tile to a standard field
                     }
                 }
-                else if (items[0] == "Build") 
-                {
-                    fuel += Convert.ToInt32(method.Invoke(thePiece, parameters));           //If the command from the user is "Dig" then call the "Dig" method for this piece and pass in the terrain as the properties
-                    if (Math.Abs(fuel) == 1)
-                    {
-                        tiles[tileToUse].SetTerrain("X");                                   //Assuming the "Dig" occured correctly then set the terrain for this particular tile to a standard field
-                    }
-                }
                 return true;                                                                //Command all ran correctly - return true
             }
             return false;                                                                   //Something didn't run correctly in the command, return false so it can be displayed back to the user.
@@ -833,7 +794,7 @@ namespace HexBaronCS
         private int ExecuteUpgradeCommand(List<string> items, int lumberAvailable)
         {
             int tileToUse = Convert.ToInt32(items[2]);                          //The tile the player wants to upgrade is at element 2 of the Commands list
-            if (!CheckPieceAndTileAreValid(tileToUse) || lumberAvailable < 5 || !(items[1] == "pbds" || items[1] == "less" || items[1] == "wall")) //If the tile isn't on the board, or the player doesn't have enough lumber to upgrade command isn't write, then return -1
+            if (!CheckPieceAndTileAreValid(tileToUse) || lumberAvailable < 5 || !(items[1] == "pbds" || items[1] == "less" || items[1] == "wizard")) //If the tile isn't on the board, or the player doesn't have enough lumber to upgrade command isn't write, then return -1
             {
                 return -1;
             }
@@ -849,9 +810,9 @@ namespace HexBaronCS
                 {
                     thePiece = new PBDSPiece(player1Turn);
                 }
-                else if (items[1] == "wall")                                         //Looks at element 2 in the <list> commands to see if the player wants to create a Peat Bog Digger or a Lumber Engineer Specialist
+                else if(items[1] == "wizard")
                 {
-                    thePiece = new WALLPiece(player1Turn);
+                    thePiece = new WIZARDPiece(player1Turn);
                 }
                 else
                 {
@@ -1124,9 +1085,3 @@ namespace HexBaronCS
         }
     }
 }
-
-
-
-
-
-
